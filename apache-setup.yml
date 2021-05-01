@@ -1,0 +1,41 @@
+- name: Install and tuning Apache, deploy test page
+  hosts: all
+  gather_facts: true
+  become: yes
+  remote_user: root
+  tasks:
+    - debug:
+        msg: "Var text: {{ text }}"
+    - name: install Apache
+      yum:
+        name: httpd
+        state: present
+    - name: Start service httpd, if not started
+      service:
+        name: httpd
+        state: started
+    - name: Enable service httpd, and not touch the state
+      service:
+        name: httpd
+        enabled: yes
+    - name: Change httpd.conf
+      template:
+        src: httpd.conf.j2
+        dest: /etc/httpd/conf/httpd.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+      - Restart apache
+    - name: Update index.html
+      template:
+        src: index.html
+        dest: /var/www/html/index.html
+        owner: centos
+        group: centos
+        
+  handlers:
+    - name: Restart apache
+      service:
+        name: httpd
+        state: restarted
